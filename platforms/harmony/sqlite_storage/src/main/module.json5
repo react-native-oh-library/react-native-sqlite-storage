@@ -1,0 +1,7 @@
+{
+  module: {
+    name: 'sqlite_storage',
+    type: 'har',
+    deviceTypes: ['default'],
+  },
+}

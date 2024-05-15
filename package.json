@@ -1,7 +1,18 @@
 {
-  "name": "react-native-sqlite-storage",
-  "version": "6.0.1",
+  "name": "@react-native-oh-tpl/react-native-sqlite-storage",
+  "version": "6.0.1-0.0.1",
   "description": "SQLite3 bindings for React Native (Android & iOS)",
+  "overrides":{
+    "@react-native/codegen": "0.74.0"
+  },
+  "harmony": {
+    "alias": "react-native-sqlite-storage",
+    "codegenConfig": {
+      "specPaths": [
+        "./"
+      ]
+    }
+  },
   "main": "sqlite.js",
   "scripts": {
     "test": "echo \"Error: no test specified yet\" && exit 1"
@@ -18,8 +29,7 @@
     "react-native",
     "sqlite",
     "sqlite3",
-    "ios",
-    "android",
+    "harmony",
     "promise",
     "cordova-sqlite-storage"
   ],
@@ -32,9 +42,13 @@
   "peerDependencies": {
     "react-native": ">=0.14.0"
   },
+  "dependencies": {
+    "react-native-sqlite-storage": "^6.0.1"
+  },
   "devDependencies": {
-    "react": "16.13.1",
-    "react-native": "^0.63.2",
-    "react-native-windows": "^0.63.6"
+    "react": "18.2.0",
+    "react-native": "0.74.1",
+    "react-native-windows": "^0.74.3",
+    "react-native-sqlite-storage": "^6.0.1"
   }
 }
