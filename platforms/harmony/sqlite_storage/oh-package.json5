@@ -1,0 +1,13 @@
+{
+  "license": "MIT",
+  "types": "",
+  "devDependencies": {},
+  "name": "@react-native-oh-tpl/react-native-sqlite-storage",
+  "description": "",
+  "main": "ts.ts",
+  "type": "module",
+  "version": "6.0.1-0.0.1",
+  "dependencies": {
+    "@rnoh/react-native-openharmony": "file:../react_native_openharmony",
+  }
+}
