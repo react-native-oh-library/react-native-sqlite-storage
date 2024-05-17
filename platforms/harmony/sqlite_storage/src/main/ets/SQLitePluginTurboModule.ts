@@ -19,32 +19,28 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
   constructor(ctx:TurboModuleContext) {
     super(ctx);
-    console.info("test--qwf=SQLitePlugin=>>>>>SQLitePluginTurboModule constructor");
-    Logger.debug(CommonConstants.TAG,'SQLitePluginTurboModule constructor');
+    Logger.debug(CommonConstants.TAG,'test--SQLitePlugin=>>>>>SQLitePluginTurboModule constructor');
     this.context = ctx;
   }
 
   DEBUG(isDebug: boolean): void {
-    console.info("test--qwf=SQLitePlugin=DEBUG>>>>>");
+    Logger.debug(CommonConstants.TAG,'test--SQLitePlugin=>>>>>DEBUG');
   }
 
   enablePromise(enablePromise: boolean): void {
-    console.info("test--qwf=SQLitePlugin=enablePromise>>>>>");
+    Logger.debug(CommonConstants.TAG,'test--SQLitePlugin=>>>>>enablePromise');
   }
   openDatabase(dbname: string, dbVersion: string, dbDisplayname: string, dbSize: number, success: () => void, error: (e: Object) => void): Object {
-    console.info("test--qwf=SQLitePlugin=openDatabase>>>>>"+dbname);
-    console.info("test--qwf=SQLitePlugin=openDatabase>>>>>数据库打开");
+    Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=openDatabase>>>>>"+dbname);
     this.STORE_CONFIG.name = dbname;
     let promise = relationalStore.getRdbStore(this.context.uiAbilityContext,this.STORE_CONFIG);
     promise.then(async (store) => {
-      console.info("test--qwf=SQLitePlugin=openDatabase>>>>>数据库打开成功");
       this.rdbStore = store;
-      Logger.debug(CommonConstants.TAG, `Get RdbStore success`,);
       success();
-      console.info("test--qwf=SQLitePlugin=openDatabase>>>>>数据库返回");
+      Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=openDatabase>>>>>success");
       return this.rdbStore;
     }).catch((err) => {
-      Logger.debug(CommonConstants.TAG,'Get RdbStore failed');
+      Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=openDatabase>>>>>fail error");
       if (error!=null) {
         const err1 = {
           "code":err.code,
@@ -57,19 +53,17 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
     return 'openDatabase fail';
   }
   async executeSql(store: Object,query: string, params: any[], success: (s: Object) => void, error: (e: Object) => void): Promise<void> {
-    console.info("test--qwf=SQLitePlugin=executeSql>>>>>"+query);
+    Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=executeSql>>>>>"+query);
     let mydb = store as relationalStore.RdbStore;
     if (mydb==null) {
-      Logger.debug(CommonConstants.TAG, `database has been closed`,);
+      Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=database has been closed>>>>>");
       return;
     }
     let errorMessage = "unknown";
     try {
       let queryTypeMatch = firstWordRegex.exec(query);
       let queryType = queryTypeMatch[1];
-      console.info("test--qwf=SQLitePlugin=executeSql>>>>>"+queryType);
       if (queryType == 'INSERT'){
-        console.info("test--qwf=SQLitePlugin=executeSql>>>>>"+queryType);
         try {
           const  values = this.extractInsertObject(query);
           let obj: relationalStore.ValuesBucket = {};
@@ -81,9 +75,9 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             let info = "key: "+values.fields[i]+"    value: "+values.values[i];
             console.log(info);
           }
-          console.info("test--qwf=SQLitePlugin=insert>>>>>tableName=="+values.tableName+"    "+JSON.stringify(valuesBucket));
           this.rdbStore.insert(values.tableName,valuesBucket,function (err,rowId){
             success("success");
+            Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=insert>>>>success");
           });
         } catch (err) {
           errorMessage = err.message;
@@ -97,18 +91,15 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
       }else if (queryType == 'SELECT'){
         await this.rdbStore.querySql(query,params,function(err,resultSet){
           if (err) {
-            console.info("test--qwf=SQLitePlugin=querySql>>>>>查询SQL数据==="+err.message);
-            Logger.debug(CommonConstants.TAG, `SQLiteDatabase Query failed, code is ${err.code},message is ${err.message}`,);
+            Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=query>>>>fail,==="+err.message);
           }else {
             let key = '';
             let colCount = resultSet.columnCount;
-            console.info("test--qwf=SQLitePlugin=querySql>>>>>查询SQL数据==colCount="+colCount+"  resultSet.getRow==  "+JSON.stringify(resultSet.columnNames));
             let results: Object[] = [];
             try {
               while (resultSet.goToNextRow()){
                 for (let i = 0; i < colCount; i++) {
                   key =resultSet.getColumnName(i);
-                  console.info("test--qwf=SQLitePlugin=querySql>>>>>key:"+key+"      value:"+resultSet.getValue(i));
                   // results.push("key:"+key+"      value:"+resultSet.getValue(i)?.toString())
                 }
               }
@@ -128,12 +119,10 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
         });
       }else {
         try {
-          console.info("test--qwf=SQLitePlugin=executeSql>>>>>执行"+query);
           await this.rdbStore.executeSql(query,params);
           success('  success');
         } catch (err) {
           errorMessage = err.message;
-          console.info("test--qwf=SQLitePlugin=executeSql>>error1111111>>>"+errorMessage);
           const err1 = {
             "code":err.code,
             "message":err.message
@@ -144,7 +133,6 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
       }
     } catch (err) {
       if (error!=null) {
-        console.info("test--qwf=SQLitePlugin=executeSql>>>>>查询SQL数据失败");
         let e = `Get RdbStore failed, code is ${err.code},message is ${err.message}`;
         const err1 = {
           "code":err.code,
@@ -156,24 +144,16 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
   }
   close(store: Object,success: () => void, error: (err: Object) => void): void {
     success();
-    // let promise = this.rdbStore.;
-    // promise.then(() => {
-    //   console.info(`Close RdbStore successfully.`);
-    //   success(`Close RdbStore successfully.`);
-    // }).catch((err) => {
-    //   console.error(`Close RdbStore failed, code is ${err.code},message is ${err.message}`);
-    //   error(`Close RdbStore failed, code is ${err.code},message is ${err.message}`);
-    // })
   }
   deleteDatabase(dbname: string, success: () => void, error: (err: Object) => void): Promise<void> | void{
-    console.info("test--qwf=SQLitePlugin=deleteDatabase>>>>>"+dbname);
+    Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=deleteDatabase>>>>>"+dbname);
     let promise = relationalStore.deleteRdbStore(this.context.uiAbilityContext, dbname);
     promise.then(()=>{
       this.rdbStore= undefined;
-      console.info(`test--qwf=SQLitePlugin=deleteDatabase>>>>>Delete RdbStore successfully.`);
+      Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=deleteDatabase>>>>>success");
       success();
     }).catch((err) => {
-      console.error(`test--qwf=SQLitePlugin=deleteDatabase>>>>>Delete RdbStore failed, code is ${err.code},message is ${err.message}`);
+      Logger.debug(CommonConstants.TAG,"test--SQLitePlugin=deleteDatabase>>>>>fail=="+err.message);
       const err1 = {
         "code":err.code,
         "message":err.message
