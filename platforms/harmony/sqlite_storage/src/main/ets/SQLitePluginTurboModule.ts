@@ -103,7 +103,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
                   // results.push("key:"+key+"      value:"+resultSet.getValue(i)?.toString())
                 }
               }
-              success(results);
+              success(resultSet);
               // 释放数据集的内存
               resultSet.close();
             } catch (err) {
