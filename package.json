@@ -1,10 +1,6 @@
 {
   "name": "@react-native-oh-tpl/react-native-sqlite-storage",
-<<<<<<< HEAD
   "version": "6.0.1-0.0.6",
-=======
-  "version": "6.0.1-0.0.4",
->>>>>>> 068c767d4b525213245d54dc73f99a9f616108e3
   "description": "SQLite3 bindings for React Native (Android & iOS)",
   "overrides":{
     "@react-native/codegen": "0.74.0"
