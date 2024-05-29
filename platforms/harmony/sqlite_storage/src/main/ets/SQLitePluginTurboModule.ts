@@ -107,7 +107,9 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
           }
           this.rdbStore.insert(values.tableName,valuesBucket,function (err,rowId){
             const callvalue = [{"result":{"rowsAffected":0},"type":"success","qid":queryId}];
-            mysuccess(callvalue);
+            setTimeout(()=>{
+              mysuccess(callvalue);
+            },0);
           });
 
         }else if(queryType=='SELECT'){
@@ -149,7 +151,9 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             Logger.debug(CommonConstants.TAG,'RdbStore ExecuteSql Complete');
             console.info('test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>complete')
             const callvalue = [{"result":{"rowsAffected":0},"type":"success","qid":queryId}];
-            mysuccess(callvalue);
+            setTimeout(()=>{
+              mysuccess(callvalue);
+            },0);
           })
         }
       } catch (e) {
