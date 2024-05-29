@@ -7,6 +7,9 @@ import { JSON } from '@kit.ArkTS';
 import json from '@ohos.util.json';
 import constant from '@ohos.bluetooth.constant';
 import { ifaa } from '@kit.OnlineAuthenticationKit';
+import { resourceManager } from '@kit.LocalizationKit';
+import fs, { ReadOptions } from '@ohos.file.fs';
+
 // import { ValueType } from '@kit.ArkData';
 
 const firstWordRegex = /^(\w+)/; // 匹配字符串开头的第一个单词
@@ -19,12 +22,8 @@ interface Executedata{
 
 export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlugin.Spec{
   static NAME = 'SQLitePlugin';
-  rdbStore: relationalStore.RdbStore;
-  rdbMap: Map<string,relationalStore.RdbStore>;
-  private STORE_CONFIG: relationalStore.StoreConfig = {
-    name: 'SQLite.db',
-    securityLevel: relationalStore.SecurityLevel.S1
-  };
+  // rdbStore: relationalStore.RdbStore;
+  rdbMap: Map<string,relationalStore.RdbStore> = new Map<string,relationalStore.RdbStore>();
   context :TurboModuleContext
 
   constructor(ctx:TurboModuleContext) {
@@ -33,20 +32,79 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
     this.context = ctx;
   }
 
+  saveFileToCache(file:resourceManager.RawFileDescriptor,dbName:string){
+    let cFile = this.context.uiAbilityContext.databaseDir+"entry/rdb/"+dbName;
+    let cacheFile = fs.openSync(cFile,fs.OpenMode.READ_WRITE| fs.OpenMode.CREATE);
+    //读取缓冲区大小
+    let bufferSize = 3000;
+    let buffer = new ArrayBuffer(bufferSize);
+    //创建buffer缓冲区
+    //要copy的文件的offset和length
+    let currentOffset = file.offset;
+    let lengthNeedToReed = file.length;
+    let readOption:ReadOptions = { offset:currentOffset,length:bufferSize };
+    while (true){
+      let readLength = fs.readSync(file.fd,buffer,readOption);
+      fs.writeSync(cacheFile.fd,buffer,{length:readLength});
+      if (readLength < bufferSize) {
+        break;
+      }
+      if (readOption.offset!=undefined) {
+        readOption.offset += readLength;
+      }
+    }
+    console.info('test--SQLitePlugin=Copy Success!!!>>>>>>');
+    fs.close(cacheFile);
+  }
+  INIT(dbName:string){
+    //创建数据库沙箱目录
+    try {
+      let dirPath = this.context.uiAbilityContext.databaseDir+"/entry"
+      fs.mkdirSync(dirPath);
+      dirPath = dirPath+"/rdb"
+      fs.mkdirSync(dirPath);
+    } catch (error) {
+      console.info('test--SQLitePlugin=mkdir rdbPath failed,error code:'+error.code+", message:"+error.message);
+    }
+    try {
+      this.context.uiAbilityContext.resourceManager.getRawFd('rdb/'+dbName,(error,value) => {
+        if (error!=null) {
+          console.info('test--SQLitePlugin=callback getRawFd failed,error code:'+error.code+", message:"+error.message)
+        }else{
+          console.info('test--SQLitePlugin=Copy Success!!!>>>>>>'+value.length.toString())
+          this.saveFileToCache(value,dbName)
+        }
+      })
+    } catch (error) {
+      console.info('test--SQLitePlugin=callback getRawFd failed,error code:'+error.code+", message:"+error.message)
+    }
+  }
+
   open(openargs: Object, opensuccesscb: () => void, openerrorcb: (e: Object) => void): void {
     console.info('test--SQLitePlugin=open>>>>>>open database start...');
     const args = openargs as Map<string,Object>;
     console.info('test--SQLitePlugin=open>>>>>>'+json.stringify(args));
     const mymap = new Map(Object.entries(JSON.parse(json.stringify(args))));
     const dbName = mymap.get('name');
-    this.STORE_CONFIG.name = dbName;
+    this.INIT(dbName);
     try {
-      let promise = relationalStore.getRdbStore(this.context.uiAbilityContext,this.STORE_CONFIG);
-      promise.then(async (store) => {
-        this.rdbStore = store;
-        Logger.debug(CommonConstants.TAG,'Get RdbStore success');
+      const STORE_CONFIG: relationalStore.StoreConfig = {
+        name: dbName,
+        securityLevel: relationalStore.SecurityLevel.S1,
+      }
+      relationalStore.getRdbStore(this.context.uiAbilityContext,STORE_CONFIG,(err,store) => {
+        if (err) {
+          console.info('test--SQLitePlugin=Failed to getRdbStore code:'+err.code+", message:"+err.message);
+          return;
+        }else{
+          Logger.debug(CommonConstants.TAG,'Get RdbStore success');
+          console.info('test--SQLitePlugin=open>>>>>>Successed in getting RdbStore');
+        }
+        // this.rdbStore = store;
+        if (this.rdbMap.get(dbName)==undefined) {
+          this.rdbMap.set(dbName,store);
+        }
         opensuccesscb();
-        return this.rdbStore;
       });
     } catch (e) {
       Logger.debug(CommonConstants.TAG,'Get RdbStore fail');
@@ -75,17 +133,18 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
   backgroundExecuteSqlBatch(args: Object, mysuccess: (result: Object) => void, myerror: (e: Object) => void): void {
     Logger.debug(CommonConstants.TAG,'RdbStore ExecuteSql');
     console.info('test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>'+json.stringify(args));
-    if (this.rdbStore==undefined) {
-      Logger.debug(CommonConstants.TAG,'database has been closed');
-      console.info('test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>database has been closed');
-      return;
-    }
     const exeargs = args as Map<string,Object>;
     const mymap = new Map(Object.entries(JSON.parse(json.stringify(exeargs))));
     const dbArgs = mymap.get('dbargs');
     const txArgs:Executedata[] = mymap.get('executes');
     const dbArgsmap = new Map(Object.entries(JSON.parse(json.stringify(txArgs))));
     const dbname = dbArgsmap.get('dbname');
+    if (this.rdbMap.get(dbname)==undefined) {
+      Logger.debug(CommonConstants.TAG,'database has been closed');
+      console.info('test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>database has been closed');
+      return;
+    }
+    const rdbStore: relationalStore.RdbStore = this.rdbMap.get(dbname);
     const len = txArgs.length;
     for (let i = 0; i < len; i++) {
       const sqlmap = new Map(Object.entries(JSON.parse(json.stringify(txArgs[i]))));
@@ -105,7 +164,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             obj.value = values.values[i];
             valuesBucket = {'name':values.values[i]};
           }
-          this.rdbStore.insert(values.tableName,valuesBucket,function (err,rowId){
+          rdbStore.insert(values.tableName,valuesBucket,function (err,rowId){
             const callvalue = [{"result":{"rowsAffected":0},"type":"success","qid":queryId}];
             setTimeout(()=>{
               mysuccess(callvalue);
@@ -113,7 +172,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
           });
 
         }else if(queryType=='SELECT'){
-          this.rdbStore.querySql(querySql,(err,resultSet) =>{
+          rdbStore.querySql(querySql,(err,resultSet) =>{
             if (err) {
               Logger.debug(CommonConstants.TAG,'database query fail '+err.message);
               console.info('test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>database query fail '+err.message);
@@ -147,7 +206,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             }
           });
         }else {
-          this.rdbStore.executeSql(querySql,() =>{
+          rdbStore.executeSql(querySql,() =>{
             Logger.debug(CommonConstants.TAG,'RdbStore ExecuteSql Complete');
             console.info('test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>complete')
             const callvalue = [{"result":{"rowsAffected":0},"type":"success","qid":queryId}];
@@ -197,7 +256,10 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
       const dbName = mymap.get('path');
       let promise = relationalStore.deleteRdbStore(this.context.uiAbilityContext,dbName);
       promise.then(() => {
-        this.rdbStore=undefined;
+        // this.rdbStore=undefined;
+        if (this.rdbMap.get(dbName)!=undefined) {
+          this.rdbMap.delete(dbName);
+        }
         Logger.debug(CommonConstants.TAG,'RdbStore delete success');
         mysuccess('database deleted');
       });
