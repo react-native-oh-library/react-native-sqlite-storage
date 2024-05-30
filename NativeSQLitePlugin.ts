@@ -9,7 +9,7 @@ export interface Spec extends TurboModule {
 
   attach(attachargs:Object,mysuccess:(t:Object,r:Object) => void,myerror:(e:Object) => void):void;
 
-  backgroundExecuteSqlBatch(args:Object,mysuccess:(result:Object) => void,myerror:(e:Object) => void):void;
+  backgroundExecuteSqlBatch(args:Object,mysuccess:(result:Object) => void,myerror:(e:Object) => void):Promise<void>;
 
   echoStringValue(openargs:Object,mysuccess:(testValue:Object) => void,myerror:(e:Object) => void):void;
 
