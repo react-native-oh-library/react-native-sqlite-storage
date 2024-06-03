@@ -25,15 +25,15 @@
 import relationalStore from '@ohos.data.relationalStore';
 
 export default class CommonConstants {
-/** 
- * Rdb database config.
- */
-static readonly STORE_CONFIG: relationalStore.StoreConfig = {
-  name: 'RKSQLite.db',
-  securityLevel: relationalStore.SecurityLevel.S1
-};
-/** 
- * Log tag.
- */
-static readonly TAG = '[RNOH] SQLiteStorage';
+  /**
+   * Rdb database config.
+   */
+  static readonly STORE_CONFIG: relationalStore.StoreConfig = {
+    name: 'RKSQLite.db',
+    securityLevel: relationalStore.SecurityLevel.S1
+  };
+  /**
+   * Log tag.
+   */
+  static readonly TAG = '[RNOH] SQLiteStorage';
 }
