@@ -1,13 +1,14 @@
-import { RNPackage,TurboModulesFactory } from '@rnoh/react-native-openharmony/ts';
-import type { TurboModule, TurboModuleContext} from '@rnoh/react-native-openharmony/ts';
+import { RNPackage, TurboModulesFactory } from '@rnoh/react-native-openharmony/ts';
+import type { TurboModule, TurboModuleContext } from '@rnoh/react-native-openharmony/ts';
 import { TM } from "@rnoh/react-native-openharmony/generated/ts";
 import { SQLitePluginTurboModule } from './SQLitePluginTurboModule';
+import Logger from './Logger';
+import CommonConstants from './CommonConstants';
 
 
-class SQLitePluginTurboModulesFactory extends TurboModulesFactory{
-
+class SQLitePluginTurboModulesFactory extends TurboModulesFactory {
   createTurboModule(name: string): TurboModule | null {
-    console.info("test--qwf=SQLitePlugin=createTurboModule>>>>>"+name);
+    Logger.debug(CommonConstants.TAG, "test--SQLitePlugin=createTurboModule>>>>>" + name);
     if (name == TM.SQLitePlugin.NAME) {
       return new SQLitePluginTurboModule(this.ctx);
     }
@@ -15,13 +16,14 @@ class SQLitePluginTurboModulesFactory extends TurboModulesFactory{
   }
 
   hasTurboModule(name: string): boolean {
-    console.info("test--qwf=SQLitePlugin=hasTurboModule>>>>>"+name);
+    Logger.debug(CommonConstants.TAG, "test--SQLitePlugin=hasTurboModule>>>>>" + name);
     return name == TM.SQLitePlugin.NAME;
   }
 }
-export class SQLitePluginPackage extends RNPackage{
+
+export class SQLitePluginPackage extends RNPackage {
   createTurboModulesFactory(ctx: TurboModuleContext): TurboModulesFactory {
-    console.info("test--qwf=SQLitePlugin=createTurboModulesFactory>>>>>");
+    Logger.debug(CommonConstants.TAG, "test--SQLitePlugin=createTurboModulesFactory>>>>>");
     return new SQLitePluginTurboModulesFactory(ctx);
   }
 }
