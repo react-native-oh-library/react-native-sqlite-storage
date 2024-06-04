@@ -60,6 +60,7 @@ xcuserdata
 android/.gradle/
 # node.js
 #
+index.lock
 node_modules/
 npm-debug.log
 *.iml
