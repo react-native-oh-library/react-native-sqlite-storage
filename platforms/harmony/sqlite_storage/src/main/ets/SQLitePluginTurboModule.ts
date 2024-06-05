@@ -7,7 +7,6 @@ import { JSON } from '@kit.ArkTS';
 import json from '@ohos.util.json'
 import { resourceManager } from '@kit.LocalizationKit';
 import fs, { ReadOptions } from '@ohos.file.fs';
-import { ValueType } from '@ohos.data.ValuesBucket';
 
 const firstWordRegex = /^(\w+)/; // 匹配字符串开头的第一个单词
 
@@ -187,23 +186,24 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
   //关闭数据库方法
   closeDatabase(dbname: string, success: (t: Object, r: Object) => void, error: (e: Object) => void): void {
-    let rdbstore = this.rdbMap.get(dbname) as relationalStore.RdbStore
-
-    if (rdbstore == undefined) {
-      Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=close>>>>>>已关闭');
-
-      success("data close", "");
-    } else {
-      try {
-        rdbstore.close().then(async () => {
-          success("data close", "");
-        });
-      } catch (e) {
-        const err = { "code": e.code, "message": e.message }
-
-        error(err);
-      }
-    }
+    // let rdbstore = this.rdbMap.get(dbname) as relationalStore.RdbStore
+    //
+    // if (rdbstore == undefined) {
+    //   Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=close>>>>>>已关闭');
+    //
+    //   success("data close", "");
+    // } else {
+    //   try {
+    //     rdbstore.close().then(async () => {
+    //       success("data close", "");
+    //     });
+    //   } catch (e) {
+    //     const err = { "code": e.code, "message": e.message }
+    //
+    //     error(err);
+    //   }
+    // }
+    success("data close", "");
   }
 
   //删除数据库方法
@@ -250,7 +250,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
     for (let i = 0; i < len; i++) {
       const sqlmap = new Map(Object.entries(JSON.parse(json.stringify(txArgs[i]))));
       const queryId = sqlmap.get('qid');
-      const querySql = sqlmap.get('sql');
+      let querySql = sqlmap.get('sql');
       const queryParams = sqlmap.get('params');
       let queryResultcall;
       let errorMessage: string = 'unknown';
@@ -260,19 +260,46 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
         let queryTypeMatch = firstWordRegex.exec(querySql);
         let queryType = queryTypeMatch[1];
 
-        if (queryType == 'INSERT') {
-          const values = this.extractInsertObject(querySql);
-          const valueBucket: relationalStore.ValuesBucket = {};
-          let record = valueBucket as Record<string, ValueType>
+        if (queryType == 'CREATE') {
+          needRawQuery = false;
 
-          for (let i = 0; i < values.fields.length; i++) {
-            record[values.fields[i]] = values.values[i];
+          try {
+            await rdbStore.execute(querySql)
+
+            queryResultcall = { 'rowsAffected': 1 }
+          } catch (e) {
+            errorMessage = e.message;
+            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>创建表失败=' + errorMessage);
           }
 
-          let rowId = await rdbStore.insert(values.tableName, record);
+        } else if (queryType == 'INSERT') {
+          needRawQuery = false;
 
-          queryResultcall = { 'insertId': rowId, 'rowsAffected': 1 }
+          try {
+            let rowId = await rdbStore.execute(querySql)
+
+            queryResultcall = { 'insertId': rowId, 'rowsAffected': 1 }
+          } catch (e) {
+            errorMessage = e.message;
+            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>插入数据失败=' + errorMessage);
+          }
+
+        } else if (queryType == 'UPDATE' || queryType == 'DELETE') {
+          needRawQuery = false;
+          let rowsAffected: relationalStore.ValueType = -1
+
+          try {
+            rowsAffected = await rdbStore.execute(querySql);
+
+            queryResultcall = { 'rowsAffected': rowsAffected }
+          } catch (e) {
+            errorMessage = e.message;
+            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>插入数据失败=' + errorMessage);
+          }
+
         } else if (queryType == 'BEGIN') {
+          needRawQuery = false;
+
           try {
             rdbStore.beginTransaction();
 
@@ -282,6 +309,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>开始事务失败=' + errorMessage);
           }
         } else if (queryType == 'COMMIT') {
+          needRawQuery = false;
+
           try {
             rdbStore.commit();
 
@@ -291,6 +320,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>结束事务失败=' + errorMessage);
           }
         } else if (queryType == 'ROLLBACK') {
+          needRawQuery = false;
+
           try {
             rdbStore.rollBack();
 
@@ -299,8 +330,11 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             errorMessage = e.message;
             Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>回滚事务失败=' + errorMessage);
           }
-        } else if (queryType == 'SELECT') {
+        }
+
+        if (needRawQuery) {
           try {
+            querySql = querySql.replace('PRAGMA table_info', 'SELECT * FROM');
             let resultSet = await rdbStore.querySql(querySql)
             const count = resultSet.columnCount;
             Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>查询数据个数====' + count);
@@ -313,17 +347,6 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             queryResultcall = { 'rowsAffected': 0, 'rows': results }
 
             resultSet.close()
-          } catch (e) {
-            Logger.debug(CommonConstants.TAG, 'Get RdbStore execute fail');
-            errorMessage = e.message
-          }
-        } else {
-          try {
-            await rdbStore.executeSql(querySql)
-
-            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>complete')
-
-            queryResultcall = { 'rowsAffected': 0 }
           } catch (e) {
             Logger.debug(CommonConstants.TAG, 'Get RdbStore execute fail');
             errorMessage = e.message
@@ -430,25 +453,6 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
     }
     Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=Copy Success!!!>>>>>>');
     fs.close(cacheFile);
-  }
-
-  extractInsertObject(sql: string): {
-    tableName: string,
-    fields: string[],
-    values: string[]
-  } | null {
-    const insertPattern = /INSERT INTO\s+(\w+)\s*\((.*?)\)\s*VALUES\s*\((.*?)\)/i;
-    const match = sql.match(insertPattern);
-
-    if (match) {
-      const tableName = match[1];
-      const fields = match[2].split(',').map(field => field.trim());
-      const valueStrings = match[3].split(',').map(value => value.trim());
-
-      // 如果需要进一步解析值（比如从字符串转为实际类型），这里可以添加逻辑
-      return { tableName, fields, values: valueStrings };
-    }
-    return null; // 如果不匹配返回null
   }
 }
 
