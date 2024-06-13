@@ -186,23 +186,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
   //关闭数据库方法
   closeDatabase(dbname: string, success: (t: Object, r: Object) => void, error: (e: Object) => void): void {
-    // let rdbstore = this.rdbMap.get(dbname) as relationalStore.RdbStore
-    //
-    // if (rdbstore == undefined) {
-    //   Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=close>>>>>>已关闭');
-    //
-    //   success("data close", "");
-    // } else {
-    //   try {
-    //     rdbstore.close().then(async () => {
-    //       success("data close", "");
-    //     });
-    //   } catch (e) {
-    //     const err = { "code": e.code, "message": e.message }
-    //
-    //     error(err);
-    //   }
-    // }
+    //新版本中无close api方法
     success("data close", "");
   }
 
