@@ -148,7 +148,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
     let dbfile = this.context.uiAbilityContext.databaseDir + "/rdb/" + dbname;
     let res = fs.accessSync(dbfile);
 
-    if (!res) {
+    if (res) {
       Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=open>>>>>>文件存在');
     } else {
       this.INIT(dbname);
