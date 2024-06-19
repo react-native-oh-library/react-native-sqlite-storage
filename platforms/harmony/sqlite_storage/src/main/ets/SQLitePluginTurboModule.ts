@@ -260,7 +260,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>插入数据失败=' + errorMessage);
           }
 
-        } else if (queryType == 'UPDATE' || queryType == 'DELETE') {
+        } else if (queryType == 'UPDATE' || queryType == 'DELETE' || queryType == 'ALTER') {
           needRawQuery = false;
           let rowsAffected: relationalStore.ValueType = -1
 
@@ -310,7 +310,6 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
         if (needRawQuery) {
           try {
-            querySql = querySql.replace('PRAGMA table_info', 'SELECT * FROM');
             let resultSet = await rdbStore.querySql(querySql)
             const count = resultSet.columnCount;
             Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>查询数据个数====' + count);
