@@ -227,7 +227,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
       const sqlmap = new Map(Object.entries(JSON.parse(json.stringify(txArgs[i]))));
       const queryId = sqlmap.get('qid');
       let querySql = sqlmap.get('sql');
-      const queryParams = sqlmap.get('params');
+      const queryParams: [] = sqlmap.get('params');
       let queryResultcall;
       let errorMessage: string = 'unknown';
 
@@ -236,7 +236,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
         let queryTypeMatch = firstWordRegex.exec(querySql);
         let queryType = queryTypeMatch[1];
 
-        if (queryType == 'CREATE') {
+        if (queryType == 'CREATE' || queryType == 'DROP') {
           needRawQuery = false;
 
           try {
@@ -252,7 +252,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
           needRawQuery = false;
 
           try {
-            let rowId = await rdbStore.execute(querySql)
+            let rowId = await rdbStore.execute(querySql, queryParams)
 
             queryResultcall = { 'insertId': rowId, 'rowsAffected': 1 }
           } catch (e) {
@@ -265,7 +265,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
           let rowsAffected: relationalStore.ValueType = -1
 
           try {
-            rowsAffected = await rdbStore.execute(querySql);
+            rowsAffected = await rdbStore.execute(querySql, queryParams);
 
             queryResultcall = { 'rowsAffected': rowsAffected }
           } catch (e) {
@@ -310,7 +310,7 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
         if (needRawQuery) {
           try {
-            let resultSet = await rdbStore.querySql(querySql)
+            let resultSet = await rdbStore.querySql(querySql, queryParams)
             const count = resultSet.columnCount;
             Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>查询数据个数====' + count);
             let results: Array<relationalStore.ValuesBucket> = new Array<relationalStore.ValuesBucket>();
