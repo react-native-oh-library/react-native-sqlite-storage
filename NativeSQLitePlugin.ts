@@ -6,37 +6,37 @@ export interface Spec extends TurboModule {
     openargs: Object,
     opensuccesscb: () => void,
     openerrorcb: (e: Object) => void
-  ): void;
+  ): Promise<void>;
 
   close(
     closeargs: Object,
     mysuccess: (t: Object, r: Object) => void,
     myerror: (e: Object) => void
-  ): void;
+  ): Promise<void>;
 
   attach(
     attachargs: Object,
     mysuccess: (t: Object, r: Object) => void,
     myerror: (e: Object) => void
-  ): void;
+  ): Promise<void>;
 
   backgroundExecuteSqlBatch(
     args: Object,
     mysuccess: (result: Object) => void,
     myerror: (e: Object) => void
-  ): void;
+  ): Promise<void>;
 
   echoStringValue(
     openargs: Object,
     mysuccess: (testValue: Object) => void,
     myerror: (e: Object) => void
-  ): void;
+  ): Promise<void>;
 
   delete(
     args: Object,
     mysuccess: (r: Object) => void,
     myerror: (e: Object) => void
-  ): void;
+  ): Promise<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>("SQLitePlugin");

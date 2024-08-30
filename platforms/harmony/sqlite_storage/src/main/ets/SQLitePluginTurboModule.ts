@@ -21,7 +21,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
     this.context = ctx;
   }
 
-  echoStringValue(openargs: Object, mysuccess: (testValue: Object) => void, myerror: (e: Object) => void): void {
+  echoStringValue(openargs: Object, mysuccess: (testValue: Object) => void,
+    myerror: (e: Object) => void): Promise<void> {
 
     try {
       this.execute(Action.echoStringValue, openargs, mysuccess, myerror);
@@ -30,9 +31,10 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
       myerror(err);
     }
+    return Promise.resolve()
   }
 
-  open(openargs: Object, opensuccesscb: () => void, openerrorcb: (e: Object) => void): void {
+  open(openargs: Object, opensuccesscb: () => void, openerrorcb: (e: Object) => void): Promise<void> {
 
     try {
       this.execute(Action.open, openargs, opensuccesscb, openerrorcb);
@@ -41,9 +43,10 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
       openerrorcb(err);
     }
+    return Promise.resolve()
   }
 
-  close(closeargs: Object, mysuccess: (t: Object, r: Object) => void, myerror: (e: Object) => void): void {
+  close(closeargs: Object, mysuccess: (t: Object, r: Object) => void, myerror: (e: Object) => void): Promise<void> {
 
     try {
       this.execute(Action.close, closeargs, mysuccess, myerror);
@@ -52,9 +55,10 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
       myerror(err);
     }
+    return Promise.resolve()
   }
 
-  delete(args: Object, mysuccess: (r: Object) => void, myerror: (e: Object) => void): void {
+  delete(args: Object, mysuccess: (r: Object) => void, myerror: (e: Object) => void): Promise<void> {
 
     try {
       this.execute(Action.delete, args, mysuccess, myerror);
@@ -63,9 +67,10 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
       myerror(err);
     }
+    return Promise.resolve()
   }
 
-  attach(attachargs: Object, mysuccess: (t: Object, r: Object) => void, myerror: (e: Object) => void): void {
+  attach(attachargs: Object, mysuccess: (t: Object, r: Object) => void, myerror: (e: Object) => void): Promise<void> {
 
     try {
       this.execute(Action.attach, attachargs, mysuccess, myerror);
@@ -74,10 +79,11 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
       myerror(err);
     }
-
+    return Promise.resolve()
   }
 
-  backgroundExecuteSqlBatch(args: Object, mysuccess: (result: Object) => void, myerror: (e: Object) => void): void {
+  backgroundExecuteSqlBatch(args: Object, mysuccess: (result: Object) => void,
+    myerror: (e: Object) => void): Promise<void> {
 
     try {
       this.execute(Action.backgroundExecuteSqlBatch, args, mysuccess, myerror);
@@ -86,10 +92,12 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
       myerror(err);
     }
+    return Promise.resolve()
   }
 
   //桥接执行方法
-  execute(actionAsString: string, args: Object, success: (result?: Object, tx?: Object) => void, error: (e: Object) => void): boolean {
+  execute(actionAsString: string, args: Object, success: (result?: Object, tx?: Object) => void,
+    error: (e: Object) => void): boolean {
     let dbname: string = '';
     const argsmap = args as Map<string, Object>;
     const map = new Map(Object.entries(JSON.parse(json.stringify(argsmap))));
@@ -155,7 +163,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
       relationalStore.getRdbStore(this.context.uiAbilityContext, STORE_CONFIG, (err, store) => {
         if (err) {
-          Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=Failed to getRdbStore code:' + err.code + ", message:" + err.message);
+          Logger.debug(CommonConstants.TAG,
+            'test--SQLitePlugin=Failed to getRdbStore code:' + err.code + ", message:" + err.message);
           const e = { "code": err.code, "message": err.message }
 
           error(e);
@@ -206,7 +215,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
   }
 
   //SQL执行数据库方法
-  async executeSqlBatchDatabase(args: Object, success: (result?: Object) => void, error: (e: Object) => void): Promise<void> {
+  async executeSqlBatchDatabase(args: Object, success: (result?: Object) => void,
+    error: (e: Object) => void): Promise<void> {
     const argsmap = args as Map<string, Object>;
     const map = new Map(Object.entries(JSON.parse(json.stringify(argsmap))));
     const dbArgs = map.get('dbargs');
@@ -245,7 +255,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             queryResultcall = { 'rowsAffected': 1 }
           } catch (e) {
             errorMessage = e.message;
-            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>创建表失败=' + errorMessage);
+            Logger.debug(CommonConstants.TAG,
+              'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>创建表失败=' + errorMessage);
           }
 
         } else if (queryType == 'INSERT') {
@@ -257,7 +268,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             queryResultcall = { 'insertId': rowId, 'rowsAffected': 1 }
           } catch (e) {
             errorMessage = e.message;
-            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>插入数据失败=' + errorMessage);
+            Logger.debug(CommonConstants.TAG,
+              'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>插入数据失败=' + errorMessage);
           }
 
         } else if (queryType == 'UPDATE' || queryType == 'DELETE' || queryType == 'ALTER') {
@@ -270,7 +282,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             queryResultcall = { 'rowsAffected': rowsAffected }
           } catch (e) {
             errorMessage = e.message;
-            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>插入数据失败=' + errorMessage);
+            Logger.debug(CommonConstants.TAG,
+              'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>插入数据失败=' + errorMessage);
           }
 
         } else if (queryType == 'BEGIN') {
@@ -282,7 +295,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             queryResultcall = { 'rowsAffected': 0 }
           } catch (e) {
             errorMessage = e.message;
-            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>开始事务失败=' + errorMessage);
+            Logger.debug(CommonConstants.TAG,
+              'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>开始事务失败=' + errorMessage);
           }
         } else if (queryType == 'COMMIT') {
           needRawQuery = false;
@@ -293,7 +307,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             queryResultcall = { 'rowsAffected': 0 }
           } catch (e) {
             errorMessage = e.message;
-            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>结束事务失败=' + errorMessage);
+            Logger.debug(CommonConstants.TAG,
+              'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>结束事务失败=' + errorMessage);
           }
         } else if (queryType == 'ROLLBACK') {
           needRawQuery = false;
@@ -304,7 +319,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
             queryResultcall = { 'rowsAffected': 0 }
           } catch (e) {
             errorMessage = e.message;
-            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>回滚事务失败=' + errorMessage);
+            Logger.debug(CommonConstants.TAG,
+              'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>回滚事务失败=' + errorMessage);
           }
         }
 
@@ -312,7 +328,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
           try {
             let resultSet = await rdbStore.querySql(querySql, queryParams)
             const count = resultSet.columnCount;
-            Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>查询数据个数====' + count);
+            Logger.debug(CommonConstants.TAG,
+              'test--SQLitePlugin=backgroundExecuteSqlBatch>>>>>>查询数据个数====' + count);
             let results: Array<relationalStore.ValuesBucket> = new Array<relationalStore.ValuesBucket>();
 
             while (resultSet.goToNextRow()) {
@@ -343,7 +360,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
     success(callvalue);
   }
 
-  async attachDatabase(dbname: string, dbNameToAttach: string, dbAlias: string, success: (t: Object, r: Object) => void, error: (e: Object) => void): Promise<void> {
+  async attachDatabase(dbname: string, dbNameToAttach: string, dbAlias: string, success: (t: Object, r: Object) => void,
+    error: (e: Object) => void): Promise<void> {
 
     const rdbStore = this.rdbMap.get(dbname) as relationalStore.RdbStore;
 
@@ -381,7 +399,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
     try {
       fs.mkdirSync(dirPath);
     } catch (error) {
-      Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=mkdir dirPath failed,error code:' + error.code + ", message:" + error.message);
+      Logger.debug(CommonConstants.TAG,
+        'test--SQLitePlugin=mkdir dirPath failed,error code:' + error.code + ", message:" + error.message);
     }
 
     try {
@@ -389,7 +408,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
       fs.mkdirSync(dirPath);
     } catch (error) {
-      Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=mkdir dirPathrdbPath failed,error code:' + error.code + ", message:" + error.message);
+      Logger.debug(CommonConstants.TAG,
+        'test--SQLitePlugin=mkdir dirPathrdbPath failed,error code:' + error.code + ", message:" + error.message);
     }
 
     try {
@@ -397,7 +417,8 @@ export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlu
 
       this.saveFileToCache(result, dbName)
     } catch (error) {
-      Logger.debug(CommonConstants.TAG, 'test--SQLitePlugin=callback getRawFd failed,error code:' + error.code + ", message:" + error.message)
+      Logger.debug(CommonConstants.TAG,
+        'test--SQLitePlugin=callback getRawFd failed,error code:' + error.code + ", message:" + error.message)
     }
   }
 
