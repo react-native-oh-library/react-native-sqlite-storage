@@ -1,4 +1,4 @@
-import { TurboModule, TurboModuleContext } from '@rnoh/react-native-openharmony/ts';
+import { WorkerTurboModule, WorkerTurboModuleContext } from '@rnoh/react-native-openharmony/ts';
 import { TM } from '@rnoh/react-native-openharmony/generated/ts';
 import Logger from './Logger';
 import CommonConstants from './CommonConstants';
@@ -10,13 +10,13 @@ import fs, { ReadOptions } from '@ohos.file.fs';
 
 const firstWordRegex = /^(\w+)/; // 匹配字符串开头的第一个单词
 
-export class SQLitePluginTurboModule extends TurboModule implements TM.SQLitePlugin.Spec {
+export class SQLitePluginTurboModule extends WorkerTurboModule implements TM.SQLitePlugin.Spec {
   static NAME = 'SQLitePlugin';
   rdbMap: Map<string, relationalStore.RdbStore> = new Map<string, relationalStore.RdbStore>();
-  context: TurboModuleContext
+  context: WorkerTurboModuleContext
 
 
-  constructor(ctx: TurboModuleContext) {
+  constructor(ctx: WorkerTurboModuleContext) {
     super(ctx);
     this.context = ctx;
   }
