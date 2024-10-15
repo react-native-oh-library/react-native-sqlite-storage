@@ -1,13 +1,16 @@
-import { RNPackage, TurboModulesFactory } from '@rnoh/react-native-openharmony/ts';
-import type { TurboModule, TurboModuleContext } from '@rnoh/react-native-openharmony/ts';
+import {
+  RNPackage,
+  AnyThreadTurboModuleFactory,
+  AnyThreadTurboModuleContext,
+  AnyThreadTurboModule
+ } from '@rnoh/react-native-openharmony/ts';
 import { TM } from "@rnoh/react-native-openharmony/generated/ts";
 import { SQLitePluginTurboModule } from './SQLitePluginTurboModule';
 import Logger from './Logger';
 import CommonConstants from './CommonConstants';
 
-
-class SQLitePluginTurboModulesFactory extends TurboModulesFactory {
-  createTurboModule(name: string): TurboModule | null {
+class SQLitePluginTurboModulesFactory extends AnyThreadTurboModuleFactory {
+  createTurboModule(name: string): AnyThreadTurboModule | null {
     if (name == TM.SQLitePlugin.NAME) {
       return new SQLitePluginTurboModule(this.ctx);
     }
@@ -20,7 +23,7 @@ class SQLitePluginTurboModulesFactory extends TurboModulesFactory {
 }
 
 export class SQLitePluginPackage extends RNPackage {
-  createTurboModulesFactory(ctx: TurboModuleContext): TurboModulesFactory {
+  createAnyThreadTurboModuleFactory(ctx: AnyThreadTurboModuleContext): AnyThreadTurboModuleFactory  {
     return new SQLitePluginTurboModulesFactory(ctx);
   }
 }
