@@ -1,0 +1,11 @@
+[
+    {
+        "Name": "react-native-sqlite-storage",
+        "License": "MIT License",
+        "License File": "LICENSE",
+        "Version Number": "6.0.1",
+        "Owner" : "xiafeng@huawei.com",
+        "Upstream URL": "https://github.com/andpor/react-native-sqlite-storage",
+        "Description": "Full featured SQLite3 Native Plugin for React Native (Android and iOS)"
+    }
+]
